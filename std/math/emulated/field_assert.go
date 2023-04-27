@@ -18,18 +18,19 @@ func assertLimbsEqualitySlow(api frontend.API, l []frontend.Variable, r []fronte
 	var zero frontend.Variable = 0
 	fmt.Println("nbLimbs:", nbLimbs)
 	for i := 0; i < nbLimbs-2; i++ {
-		fmt.Println("i:", i, "l:", l[i], "r:", r[i])
+		// fmt.Println("i:", i, "l:", l[i], "r:", r[i])
 		diff := api.Sub(l[i], r[i])
-		fmt.Println("diff_before_carry:", diff)
+		// fmt.Println("diff_before_carry:", diff)
 		diff = api.Add(diff, carry)
 		carry = api.Div(diff, base)
-		fmt.Println("i:", i, "carry:", carry)
+		// fmt.Println("i:", i, "carry:", carry)
 		// api.AssertIsLessOrEqual(carry, api.Mul(base, ten))
 	}
 	val := api.Sub(l[nbLimbs-2], r[nbLimbs-2])
 	val = api.Add(val, carry)
 
 	api.AssertIsEqual(val, zero)
+	fmt.Println("ASSERTION LIMB OK")
 }
 
 // rsh right shifts a variable endDigit-startDigit bits and returns it.

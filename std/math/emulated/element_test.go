@@ -249,6 +249,8 @@ func (c *ReduceAfterMulCircuit[T]) Define(api frontend.API) error {
 		return err
 	}
 	res := f.Mul(&c.A, &c.B)
+
+	fmt.Println("START REDUCTION of res: ", res)
 	res = f.Reduce(res)
 	f.AssertIsEqual(res, &c.C)
 	return nil
@@ -258,10 +260,10 @@ func TestReduceAfterMul(t *testing.T) {
 	// testReduceAfterMul[Goldilocks](t)
 	// testReduceAfterMul[Secp256k1Fp](t)
 	// testReduceAfterMul[BN254Fp](t)
-	testReduceAfterMul[BN254Fr](t)
-
+	// testReduceAfterMul[BN254Fr](t)
+	// testReduceAfterMul[Secp256k1Fr](t)
 	// testReduceAfterMul[BLS12377Fp](t)
-	// testReduceAfterMul[STARKCurveFp](t)
+	testReduceAfterMul[STARKCurveFp](t)
 }
 
 func testReduceAfterMul[T FieldParams](t *testing.T) {
