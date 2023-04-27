@@ -11,31 +11,25 @@ import (
 // assertLimbsEqualitySlow is the main routine in the package. It asserts that the
 // two slices of limbs represent the same integer value. This is also the most
 // costly operation in the package as it does bit decomposition of the limbs.
-func assertLimbsEqualitySlow(api frontend.API, l, r []frontend.Variable, nbBits, nbCarryBits uint) {
-
+func assertLimbsEqualitySlow(api frontend.API, l []frontend.Variable, r []frontend.Variable, base frontend.Variable) {
 	nbLimbs := max(len(l), len(r))
-	maxValue := new(big.Int).Lsh(big.NewInt(1), nbBits+nbCarryBits)
-	maxValueShift := new(big.Int).Lsh(big.NewInt(1), nbCarryBits)
-
+	// var ten frontend.Variable = 10
 	var carry frontend.Variable = 0
-	for i := 0; i < nbLimbs; i++ {
-		diff := api.Add(maxValue, carry)
-		if i < len(l) {
-			diff = api.Add(diff, l[i])
-		}
-		if i < len(r) {
-			diff = api.Sub(diff, r[i])
-		}
-		if i > 0 {
-			diff = api.Sub(diff, maxValueShift)
-		}
-
-		// carry is stored in the highest bits of diff[nbBits:nbBits+nbCarryBits+1]
-		// we know that diff[:nbBits] are 0 bits, but still need to constrain them.
-		// to do both; we do a "clean" right shift and only need to boolean constrain the carry part
-		carry = rsh(api, diff, int(nbBits), int(nbBits+nbCarryBits+1))
+	var zero frontend.Variable = 0
+	fmt.Println("nbLimbs:", nbLimbs)
+	for i := 0; i < nbLimbs-2; i++ {
+		fmt.Println("i:", i, "l:", l[i], "r:", r[i])
+		diff := api.Sub(l[i], r[i])
+		fmt.Println("diff_before_carry:", diff)
+		diff = api.Add(diff, carry)
+		carry = api.Div(diff, base)
+		fmt.Println("i:", i, "carry:", carry)
+		// api.AssertIsLessOrEqual(carry, api.Mul(base, ten))
 	}
-	api.AssertIsEqual(carry, maxValueShift)
+	val := api.Sub(l[nbLimbs-2], r[nbLimbs-2])
+	val = api.Add(val, carry)
+
+	api.AssertIsEqual(val, zero)
 }
 
 // rsh right shifts a variable endDigit-startDigit bits and returns it.
@@ -98,19 +92,9 @@ func (f *Field[T]) AssertLimbsEquality(a, b *Element[T]) {
 		return
 	}
 
-	// first, we check if we can compact a and b; they could be using 8 limbs of 32bits
-	// but with our snark field, we could express them in 2 limbs of 128bits, which would make bit decomposition
-	// and limbs equality in-circuit (way) cheaper
-	ca, cb, bitsPerLimb := f.compact(a, b)
+	var base frontend.Variable = f.fParams.Base()
+	assertLimbsEqualitySlow(f.api, a.Limbs, b.Limbs, base)
 
-	// slow path -- the overflows are different. Need to compare with carries.
-	// TODO: we previously assumed that one side was "larger" than the other
-	// side, but I think this assumption is not valid anymore
-	if a.overflow > b.overflow {
-		assertLimbsEqualitySlow(f.api, ca, cb, bitsPerLimb, a.overflow)
-	} else {
-		assertLimbsEqualitySlow(f.api, cb, ca, bitsPerLimb, b.overflow)
-	}
 }
 
 // enforceWidth enforces the width of the limbs. When modWidth is true, then the
