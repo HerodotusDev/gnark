@@ -10,6 +10,7 @@ import (
 type FieldParams interface {
 	NbLimbs() uint     // number of limbs to represent field element
 	BitsPerLimb() uint // number of bits per limb. Top limb may contain less than limbSize bits.
+	Base() *big.Int    // base of the field
 	IsPrime() bool     // indicates if the modulus is prime
 	Modulus() *big.Int // returns modulus. Do not modify.
 }
@@ -17,12 +18,17 @@ type FieldParams interface {
 var (
 	qSecp256k1, rSecp256k1 *big.Int
 	qGoldilocks            *big.Int
+	base64                 *big.Int
+	qSTARK                 *big.Int
 )
 
 func init() {
 	qSecp256k1, _ = new(big.Int).SetString("fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f", 16)
 	rSecp256k1, _ = new(big.Int).SetString("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16)
 	qGoldilocks, _ = new(big.Int).SetString("ffffffff00000001", 16)
+	qSTARK, _ = new(big.Int).SetString("800000000000011000000000000000000000000000000000000000000000001", 16)
+
+	base64, _ = new(big.Int).SetString("10000000000000000", 16)
 }
 
 // Goldilocks provide type parametrization for emulated field on 1 limb of width 64bits
@@ -31,6 +37,7 @@ type Goldilocks struct{}
 
 func (fp Goldilocks) NbLimbs() uint     { return 1 }
 func (fp Goldilocks) BitsPerLimb() uint { return 64 }
+func (fp Goldilocks) Base() *big.Int    { return base64 }
 func (fp Goldilocks) IsPrime() bool     { return true }
 func (fp Goldilocks) Modulus() *big.Int { return qGoldilocks }
 
@@ -41,6 +48,7 @@ type Secp256k1Fp struct{}
 
 func (fp Secp256k1Fp) NbLimbs() uint     { return 4 }
 func (fp Secp256k1Fp) BitsPerLimb() uint { return 64 }
+func (fp Secp256k1Fp) Base() *big.Int    { return base64 }
 func (fp Secp256k1Fp) IsPrime() bool     { return true }
 func (fp Secp256k1Fp) Modulus() *big.Int { return qSecp256k1 }
 
@@ -51,6 +59,7 @@ type Secp256k1Fr struct{}
 
 func (fp Secp256k1Fr) NbLimbs() uint     { return 4 }
 func (fp Secp256k1Fr) BitsPerLimb() uint { return 64 }
+func (fp Secp256k1Fr) Base() *big.Int    { return base64 }
 func (fp Secp256k1Fr) IsPrime() bool     { return true }
 func (fp Secp256k1Fr) Modulus() *big.Int { return rSecp256k1 }
 
@@ -62,6 +71,7 @@ type BN254Fp struct{}
 
 func (fp BN254Fp) NbLimbs() uint     { return 4 }
 func (fp BN254Fp) BitsPerLimb() uint { return 64 }
+func (fp BN254Fp) Base() *big.Int    { return base64 }
 func (fp BN254Fp) IsPrime() bool     { return true }
 func (fp BN254Fp) Modulus() *big.Int { return ecc.BN254.BaseField() }
 
@@ -73,6 +83,8 @@ type BN254Fr struct{}
 
 func (fp BN254Fr) NbLimbs() uint     { return 4 }
 func (fp BN254Fr) BitsPerLimb() uint { return 64 }
+func (fp BN254Fr) Base() *big.Int    { return base64 }
+
 func (fp BN254Fr) IsPrime() bool     { return true }
 func (fp BN254Fr) Modulus() *big.Int { return ecc.BN254.ScalarField() }
 
@@ -84,5 +96,15 @@ type BLS12377Fp struct{}
 
 func (fp BLS12377Fp) NbLimbs() uint     { return 6 }
 func (fp BLS12377Fp) BitsPerLimb() uint { return 64 }
+func (fp BLS12377Fp) Base() *big.Int    { return base64 }
+
 func (fp BLS12377Fp) IsPrime() bool     { return true }
 func (fp BLS12377Fp) Modulus() *big.Int { return ecc.BLS12_377.BaseField() }
+
+type STARKCurveFp struct{}
+
+func (fp STARKCurveFp) NbLimbs() uint     { return 4 }
+func (fp STARKCurveFp) BitsPerLimb() uint { return 64 }
+func (fp STARKCurveFp) Base() *big.Int    { return base64 }
+func (fp STARKCurveFp) IsPrime() bool     { return true }
+func (fp STARKCurveFp) Modulus() *big.Int { return qSTARK }
