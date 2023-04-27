@@ -200,7 +200,6 @@ func (f *Field[T]) mul(a, b *Element[T], nextOverflow uint) *Element[T] {
 // Reduce reduces a modulo the field order and returns it. Uses hint [RemHint].
 func (f *Field[T]) Reduce(a *Element[T]) *Element[T] {
 	f.enforceWidthConditional(a)
-	fmt.Println("REDUCING VALUE:", a)
 	if a.overflow == 0 {
 		// fast path - already reduced, omit reduction.
 		return a
