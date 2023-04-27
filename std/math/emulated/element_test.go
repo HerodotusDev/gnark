@@ -237,6 +237,45 @@ func testReduceAfterAdd[T FieldParams](t *testing.T) {
 	}, testName[T]())
 }
 
+type ReduceAfterMulCircuit[T FieldParams] struct {
+	A Element[T]
+	B Element[T]
+	C Element[T]
+}
+
+func (c *ReduceAfterMulCircuit[T]) Define(api frontend.API) error {
+	f, err := NewField[T](api)
+	if err != nil {
+		return err
+	}
+	res := f.Mul(&c.A, &c.B)
+	res = f.Reduce(res)
+	f.AssertIsEqual(res, &c.C)
+	return nil
+}
+
+func TestReduceAfterMul(t *testing.T) {
+	//testReduceAfterMul[Goldilocks](t)
+	testReduceAfterMul[Secp256k1Fp](t)
+	//testReduceAfterMul[BN254Fp](t)
+}
+
+func testReduceAfterMul[T FieldParams](t *testing.T) {
+	var fp T
+	assert := test.NewAssert(t)
+	assert.Run(func(assert *test.Assert) {
+		var circuit, witness ReduceAfterMulCircuit[T]
+		val1, _ := rand.Int(rand.Reader, fp.Modulus())
+		val2, _ := rand.Int(rand.Reader, fp.Modulus())
+		val3 := new(big.Int).Mul(val1, val2)
+    val3 = new(big.Int).Mod(val3, fp.Modulus())
+		witness.A = ValueOf[T](val1)
+		witness.B = ValueOf[T](val2)
+		witness.C = ValueOf[T](val3)
+		assert.ProverSucceeded(&circuit, &witness, test.WithCurves(testCurve), test.NoSerialization(), test.WithBackends(backend.GROTH16))
+	}, testName[T]())
+}
+
 type SubtractCircuit[T FieldParams] struct {
 	A Element[T]
 	B Element[T]
