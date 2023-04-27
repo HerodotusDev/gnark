@@ -140,9 +140,9 @@ func (c *MulNoOverflowCircuit[T]) Define(api frontend.API) error {
 }
 
 func TestMulCircuitNoOverflow(t *testing.T) {
-	// testMulCircuitNoOverflow[Goldilocks](t)
+	testMulCircuitNoOverflow[Goldilocks](t)
 	testMulCircuitNoOverflow[Secp256k1Fp](t)
-	// testMulCircuitNoOverflow[BN254Fp](t)
+	testMulCircuitNoOverflow[BN254Fp](t)
 }
 
 func testMulCircuitNoOverflow[T FieldParams](t *testing.T) {
@@ -255,9 +255,13 @@ func (c *ReduceAfterMulCircuit[T]) Define(api frontend.API) error {
 }
 
 func TestReduceAfterMul(t *testing.T) {
-	//testReduceAfterMul[Goldilocks](t)
-	testReduceAfterMul[Secp256k1Fp](t)
-	//testReduceAfterMul[BN254Fp](t)
+	// testReduceAfterMul[Goldilocks](t)
+	// testReduceAfterMul[Secp256k1Fp](t)
+	// testReduceAfterMul[BN254Fp](t)
+	testReduceAfterMul[BN254Fr](t)
+
+	// testReduceAfterMul[BLS12377Fp](t)
+	// testReduceAfterMul[STARKCurveFp](t)
 }
 
 func testReduceAfterMul[T FieldParams](t *testing.T) {
@@ -267,8 +271,12 @@ func testReduceAfterMul[T FieldParams](t *testing.T) {
 		var circuit, witness ReduceAfterMulCircuit[T]
 		val1, _ := rand.Int(rand.Reader, fp.Modulus())
 		val2, _ := rand.Int(rand.Reader, fp.Modulus())
+
+		// val1, _ := new(big.Int).SetString("101443259451774740820127083198921104735227297773705000208198713130293320310827", 10)
+		// val2, _ := new(big.Int).SetString("6471304422322657744912889864491930810951514926562898310913290700521374020499", 10)
+
 		val3 := new(big.Int).Mul(val1, val2)
-    val3 = new(big.Int).Mod(val3, fp.Modulus())
+		val3 = new(big.Int).Mod(val3, fp.Modulus())
 		witness.A = ValueOf[T](val1)
 		witness.B = ValueOf[T](val2)
 		witness.C = ValueOf[T](val3)
